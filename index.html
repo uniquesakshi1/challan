@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUDHIR AUTO INDUSTRIES - ERP</title>
+    <title>SUDHIR AUTO INDUSTRIES - ERP V15</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -23,10 +23,24 @@
         .input-classic { border: 1px solid #999; padding: 6px; border-radius: 4px; width: 100%; text-transform: uppercase; font-weight: bold; font-size: 13px; }
         .no-border-input { border-bottom: 1px solid black; outline: none; background: transparent; font-weight: bold; padding: 2px; text-transform: uppercase; }
         
+        /* प्रिंट के समय एरो (Arrows) हटाने के लिए */
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; padding: 0 !important; }
             .challan-box { border: 2px solid black !important; box-shadow: none !important; width: 100% !important; margin: 0 !important; }
+            
+            /* इनपुट और सिलेक्ट से बटन/ऐरो हटाना */
+            select, input[type="date"] {
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                background: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            /* सिर्फ प्रिंट में बॉर्डर दिखाना अगर ज़रूरी हो */
+            .qty-val, .unit-val { border: none !important; }
         }
     </style>
 </head>
@@ -48,16 +62,17 @@
         <div id="section-master" class="hidden bg-white p-6 rounded shadow border">
             <h2 class="text-lg font-bold border-b-2 border-blue-800 pb-2 mb-4 uppercase">Party & Item Master</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 border rounded mb-4">
+                <input type="hidden" id="edit_index">
                 <div><label class="text-[10px] font-bold">CUSTOMER NAME</label><input id="m_party" class="input-classic"></div>
                 <div><label class="text-[10px] font-bold">ADDRESS</label><input id="m_address" class="input-classic"></div>
                 <div><label class="text-[10px] font-bold">PART NO / DESCRIPTION</label><input id="m_part" class="input-classic"></div>
                 <div><label class="text-[10px] font-bold">P.O. NUMBER</label><input id="m_po" class="input-classic"></div>
                 <div><label class="text-[10px] font-bold">P.O. DATE</label><input id="m_po_date" type="date" class="input-classic"></div>
                 <div class="md:col-span-2 text-right">
-                    <button onclick="saveToMaster()" class="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800">SAVE TO MASTER</button>
+                    <button id="masterBtn" onclick="saveToMaster()" class="bg-blue-700 text-white px-6 py-2 rounded font-bold hover:bg-blue-800 uppercase">Save to Master</button>
                 </div>
             </div>
-            <div id="masterView" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+            <div id="masterView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </div>
 
         <div id="section-challan" class="block">
@@ -72,8 +87,8 @@
                 </div>
                 <button onclick="addItemToChallan()" class="bg-blue-600 text-white px-6 py-2 rounded font-bold">+ ADD ITEM</button>
                 <div class="ml-auto flex gap-2">
-                    <button onclick="downloadPDF()" class="bg-gray-700 text-white px-4 py-2 rounded font-bold text-xs">DOWNLOAD PDF</button>
-                    <button onclick="saveAndAction()" class="bg-green-700 text-white px-4 py-2 rounded font-bold text-xs">SAVE & PRINT</button>
+                    <button onclick="downloadPDF()" class="bg-gray-700 text-white px-4 py-2 rounded font-bold text-xs uppercase">Download PDF</button>
+                    <button onclick="saveAndAction()" class="bg-green-700 text-white px-4 py-2 rounded font-bold text-xs uppercase">Save & Print</button>
                 </div>
             </div>
 
@@ -81,7 +96,7 @@
                 <div class="flex justify-between items-start border-b-2 border-black pb-4 mb-4">
                     <div class="w-2/3">
                         <h1 class="text-xl md:text-2xl font-black text-blue-900 leading-none uppercase">Sudhir Automotive Industries Pvt.Ltd.</h1>
-                        <p class="text-[9px] md:text-[10px] font-bold mt-1">Gat No.- 202/3, Kuruli, Chimbali Fata, Pune - 410501</p>
+                        <p class="text-[9px] md:text-[10px] font-bold mt-1 uppercase">Gat No.- 202/3, Kuruli, Chimbali Fata, Pune - 410501</p>
                         <p class="text-[10px] md:text-[11px] font-bold mt-1 border border-black inline-block px-2">GSTIN: 27AAFCS9512F1ZA</p>
                     </div>
                     <div class="w-1/3 text-right text-[10px] md:text-xs font-bold">
@@ -95,12 +110,12 @@
                     <div class="p-3 border-b md:border-b-0 md:border-r border-black min-h-[100px]">
                         <p class="underline italic text-gray-600 mb-1">CONSIGNEE:</p>
                         <input id="c_party_name" class="w-full font-black text-sm outline-none bg-transparent" readonly>
-                        <textarea id="c_address" class="w-full h-14 outline-none mt-1 resize-none bg-transparent leading-tight uppercase" readonly></textarea>
+                        <textarea id="c_address" class="w-full h-14 outline-none mt-1 resize-none bg-transparent leading-tight uppercase font-bold" readonly></textarea>
                     </div>
                     <div class="p-3 space-y-2">
-                        <p class="flex justify-between">VEHICLE NO: <input id="c_vno" class="no-border-input w-36 text-right"></p>
-                        <p class="flex justify-between">P.O. NO: <input id="c_po_no" class="no-border-input w-36 text-right"></p>
-                        <p class="flex justify-between">P.O. DATE: <input id="c_po_date" type="date" class="no-border-input w-36 text-right bg-transparent"></p>
+                        <p class="flex justify-between items-center">VEHICLE NO: <input id="c_vno" class="no-border-input w-36 text-right"></p>
+                        <p class="flex justify-between items-center">P.O. NO: <input id="c_po_no" class="no-border-input w-36 text-right"></p>
+                        <p class="flex justify-between items-center">P.O. DATE: <input id="c_po_date" type="date" class="no-border-input w-36 text-right bg-transparent"></p>
                     </div>
                 </div>
 
@@ -110,13 +125,14 @@
                             <th class="p-2 border-r border-black w-10 text-center">SN</th>
                             <th class="p-2 border-r border-black text-center">Part Description</th>
                             <th class="p-2 w-32 text-center">QTY & UNIT</th>
+                            <th class="p-2 w-10 text-center no-print"></th>
                         </tr>
                     </thead>
                     <tbody id="challanTableBody" class="text-xs font-bold uppercase"></tbody>
                     <tfoot>
                         <tr class="border-t-2 border-black font-black bg-gray-50 uppercase">
                             <td colspan="2" class="p-2 text-right border-r border-black text-[10px]">Total Quantity:</td>
-                            <td id="grandTotalQty" class="p-2 text-center text-sm">0</td>
+                            <td id="grandTotalQty" class="p-2 text-center text-sm" colspan="2">0</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -139,7 +155,7 @@
         </div>
 
         <div id="section-outward" class="hidden bg-white p-6 rounded shadow border">
-            <h2 class="text-lg font-bold text-blue-900 border-b-2 border-blue-900 pb-2 mb-4 uppercase italic">Transaction Ledger</h2>
+            <h2 class="text-lg font-bold text-blue-900 border-b-2 border-blue-900 pb-2 mb-4 uppercase italic">Ledger Record</h2>
             <div class="no-print grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 border rounded">
                 <select id="reportParty" onchange="filterLedger()" class="input-classic bg-white"></select>
                 <input type="date" id="fromDate" onchange="filterLedger()" class="input-classic">
@@ -148,8 +164,10 @@
             </div>
             <div class="overflow-x-auto">
                 <table class='w-full border-collapse text-sm text-left font-bold uppercase'>
-                    <thead class='bg-slate-800 text-white text-[10px]'>
-                        <tr><th class='p-3 border'>Date</th><th class='p-3 border'>Challan No</th><th class='p-3 border'>Customer</th><th class='p-3 border text-center'>Qty</th><th class='p-3 border text-center no-print'>Action</th></tr>
+                    <thead class='bg-slate-800 text-white text-[10px] uppercase'>
+                        <tr>
+                            <th class='p-3 border'>Date</th><th class='p-3 border'>Challan No</th><th class='p-3 border'>Customer</th><th class='p-3 border'>Parts</th><th class='p-3 border text-center'>Qty</th><th class='p-3 border text-center no-print'>Action</th>
+                        </tr>
                     </thead>
                     <tbody id="reportTableBody" class="bg-white"></tbody>
                 </table>
@@ -160,7 +178,8 @@
     <script>
         let masterDB = JSON.parse(localStorage.getItem('SAI_Master_VFinal')) || {};
         let outwardDB = JSON.parse(localStorage.getItem('SAI_Outward_VFinal')) || [];
-        let nextNum = parseInt(localStorage.getItem('SAI_Num_VFinal')) || 101;
+        // Challan No Logic
+        let currentNum = parseInt(localStorage.getItem('SAI_Num_VFinal')) || 101;
 
         function showSection(id) {
             ['challan','master','outward'].forEach(s => document.getElementById('section-'+s).classList.add('hidden'));
@@ -175,20 +194,48 @@
             const part = document.getElementById('m_part').value.trim().toUpperCase();
             const po = document.getElementById('m_po').value.trim().toUpperCase();
             const poDate = document.getElementById('m_po_date').value;
+            const editIdx = document.getElementById('edit_index').value;
 
-            if(!p || !part) return alert("Customer and Part Name required!");
+            if(!p || !part) return alert("Fill mandatory fields!");
             if(!masterDB[p]) masterDB[p] = { address: a, items: [] };
-            masterDB[p].items.push({ part, po, poDate });
+            
+            if(editIdx !== "") {
+                masterDB[p].items[editIdx] = { part, po, poDate };
+                document.getElementById('edit_index').value = "";
+                document.getElementById('masterBtn').innerText = "Save to Master";
+            } else {
+                masterDB[p].items.push({ part, po, poDate });
+            }
             
             localStorage.setItem('SAI_Master_VFinal', JSON.stringify(masterDB));
             renderMasterList(); populatePartySelects();
-            alert("Part Details Saved!");
+            alert("Master updated!");
             ['m_part','m_po','m_po_date'].forEach(id => document.getElementById(id).value = "");
+        }
+
+        function editMaster(party, idx) {
+            const item = masterDB[party].items[idx];
+            document.getElementById('m_party').value = party;
+            document.getElementById('m_address').value = masterDB[party].address;
+            document.getElementById('m_part').value = item.part;
+            document.getElementById('m_po').value = item.po;
+            document.getElementById('m_po_date').value = item.poDate;
+            document.getElementById('edit_index').value = idx;
+            document.getElementById('masterBtn').innerText = "UPDATE ITEM";
+            window.scrollTo(0,0);
         }
 
         function renderMasterList() {
             const div = document.getElementById('masterView'); div.innerHTML = "";
-            for(let p in masterDB) div.innerHTML += `<div class='border p-2 bg-white text-[10px] font-bold uppercase shadow-sm border-l-4 border-blue-600'>${p}</div>`;
+            for(let p in masterDB) {
+                masterDB[p].items.forEach((it, idx) => {
+                    div.innerHTML += `
+                    <div class='bg-white border-l-4 border-blue-600 p-3 shadow-sm rounded flex justify-between items-center'>
+                        <div><p class='text-[10px] font-black text-blue-900'>${p}</p><p class='text-[11px] font-bold'>${it.part}</p></div>
+                        <button onclick="editMaster('${p}', ${idx})" class='text-[10px] bg-gray-200 px-2 py-1 rounded font-bold hover:bg-blue-100 uppercase'>Edit</button>
+                    </div>`;
+                });
+            }
         }
 
         function populatePartySelects() {
@@ -232,15 +279,22 @@
             const tbody = document.getElementById('challanTableBody');
             tbody.insertAdjacentHTML('beforeend', `
                 <tr class="border-b border-black">
-                    <td class="p-2 border-r border-black text-center">${tbody.rows.length + 1}</td>
-                    <td class="p-2 border-r border-black uppercase font-bold">${item.part}</td>
+                    <td class="p-2 border-r border-black text-center sn">${tbody.rows.length + 1}</td>
+                    <td class="p-2 border-r border-black uppercase font-bold part-name-cell">${item.part}</td>
                     <td class="p-2 text-center flex items-center gap-2 justify-center">
                         <input type="number" oninput="sumTotal()" class="qty-val w-16 text-center outline-none bg-yellow-50 font-black border-b border-black">
                         <select class="unit-val bg-transparent text-[10px] font-bold outline-none border rounded">
                             <option value="NOS">NOS</option><option value="KG">KG</option>
                         </select>
                     </td>
+                    <td class="p-2 no-print text-center">
+                        <button onclick="this.closest('tr').remove(); sumTotal(); reIndex();" class="text-red-600 font-bold">X</button>
+                    </td>
                 </tr>`);
+        }
+
+        function reIndex() {
+            document.querySelectorAll('#challanTableBody tr').forEach((tr, i) => tr.querySelector('.sn').innerText = i+1);
         }
 
         function sumTotal() {
@@ -251,17 +305,27 @@
 
         function saveAndAction() {
             const p = document.getElementById('c_party_name').value;
-            if(!p || document.querySelectorAll('#challanTableBody tr').length === 0) return alert("Challan is empty!");
+            const rows = document.querySelectorAll('#challanTableBody tr');
+            if(!p || rows.length === 0) return alert("Challan is empty!");
+
+            let partNames = [];
+            rows.forEach(row => partNames.push(row.querySelector('.part-name-cell').innerText));
+
             outwardDB.push({
                 no: document.getElementById('c_no').value,
                 date: document.getElementById('c_date').value,
                 party: p,
+                parts: partNames.join(", "),
                 totalQty: document.getElementById('grandTotalQty').innerText
             });
+
+            // Increase logic
+            currentNum++;
+            localStorage.setItem('SAI_Num_VFinal', currentNum);
             localStorage.setItem('SAI_Outward_VFinal', JSON.stringify(outwardDB));
-            localStorage.setItem('SAI_Num_VFinal', nextNum + 1);
+
             window.print();
-            setTimeout(() => location.reload(), 800);
+            setTimeout(() => location.reload(), 1000);
         }
 
         function downloadPDF() {
@@ -284,16 +348,25 @@
             const to = document.getElementById('toDate').value;
             const filtered = outwardDB.filter(i => (p === "" || i.party === p) && (!from || i.date >= from) && (!to || i.date <= to));
             document.getElementById('reportTableBody').innerHTML = filtered.map((i, idx) => `
-                <tr class="border-b uppercase"><td class="p-3 border">${i.date}</td><td class="p-3 border text-blue-800 font-bold">${i.no}</td><td class="p-3 border">${i.party}</td><td class="p-3 border text-center font-black">${i.totalQty}</td>
-                <td class="p-3 border text-center no-print"><button onclick="deleteEntry(${outwardDB.indexOf(i)})" class="text-red-600 font-bold">DEL</button></td></tr>`).reverse().join('');
+                <tr class="border-b uppercase text-[11px]">
+                    <td class="p-3 border">${i.date}</td>
+                    <td class="p-3 border text-blue-800 font-bold">${i.no}</td>
+                    <td class="p-3 border">${i.party}</td>
+                    <td class="p-3 border italic text-gray-700">${i.parts || "-"}</td>
+                    <td class="p-3 border text-center font-black">${i.totalQty}</td>
+                    <td class="p-3 border text-center no-print">
+                        <button onclick="deleteEntry(${outwardDB.indexOf(i)})" class="text-red-600 font-bold">DEL</button>
+                    </td>
+                </tr>`).reverse().join('');
         }
 
         function deleteEntry(idx) { if(confirm("Confirm Delete?")) { outwardDB.splice(idx, 1); localStorage.setItem('SAI_Outward_VFinal', JSON.stringify(outwardDB)); filterLedger(); } }
 
         window.onload = () => {
             document.getElementById('c_date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('c_no').value = 'SAI/25-26/' + nextNum;
+            document.getElementById('c_no').value = 'SAI/25-26/' + currentNum;
             populatePartySelects();
+            renderMasterList();
         }
     </script>
 </body>
